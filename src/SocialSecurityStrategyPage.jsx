@@ -5,7 +5,25 @@ export default function SocialSecurityStrategyPage({ formData, setFormData, setP
     claimAge: formData.claimAge || '62',
     estimatedMonthlySS: formData.estimatedMonthlySS || '',
     wepApplied: formData.wepApplied || false,
-    srsEligible: formData.srsEligible || true
+    srsEligible: formData.srsEligible || true,
+
+    // Spousal Strategy
+    spouseName: formData.spouseName || '',
+    spouseDob: formData.spouseDob || '',
+    spouseClaimAge: formData.spouseClaimAge || '62',
+    useSpousalMaxDelay: formData.useSpousalMaxDelay || false,
+
+    // Dependents
+    hasDependents: formData.hasDependents || false,
+    numberOfDependents: formData.numberOfDependents || '',
+    dependentsAges: formData.dependentsAges || [],
+
+    // Disability
+    receivingSsdi: formData.receivingSsdi || false,
+    medicalRetirement: formData.medicalRetirement || false,
+
+    // Tax Impact
+    futureTaxBracket: formData.futureTaxBracket || 22
   });
 
   const handleChange = (e) => {
@@ -23,6 +41,13 @@ export default function SocialSecurityStrategyPage({ formData, setFormData, setP
     }));
   };
 
+  const handleArrayChange = (index, e) => {
+    const newAges = [...ssData.dependentsAges];
+    newAges[index] = e.target.value;
+    setSSData((prev) => ({ ...prev, dependentsAges: newAges }));
+    setFormData((prev) => ({ ...prev, dependentsAges: newAges }));
+  };
+
   const calculateAgeFromDob = (dob) => {
     if (!dob) return 0;
     const birthDate = new Date(dob);
@@ -34,11 +59,12 @@ export default function SocialSecurityStrategyPage({ formData, setFormData, setP
   };
 
   const userAge = calculateAgeFromDob(formData.dob);
+  const spouseAge = calculateAgeFromDob(formData.spouseDob);
+
   const futureYears = Array.from({ length: 40 }, (_, i) => userAge + i);
 
   const getMonthlyPayout = (claimAge, baseSS, wep, gpo) => {
     let factor = 1;
-
     switch (claimAge) {
       case '62': factor = 0.7; break;
       case '67': factor = 1.0; break;
@@ -77,7 +103,7 @@ export default function SocialSecurityStrategyPage({ formData, setFormData, setP
       <h1 className="text-4xl font-bold mb-6">Social Security Strategy Tool</h1>
 
       <form className="bg-white shadow-md rounded p-6 space-y-6 max-w-3xl mx-auto">
-        {/* Estimated SS Benefit */}
+        {/* Your Social Security Estimate */}
         <section>
           <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Your Social Security Estimate</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,42 +158,201 @@ export default function SocialSecurityStrategyPage({ formData, setFormData, setP
               </label>
             </div>
           </div>
+          <div className="mt-4 text-sm text-gray-600">
+            <a href="https://www.ssa.gov/OACT/quickcalc/index.html " target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">
+              Get an estimate from SSA Quick Calculator →
+            </a>
+          </div>
         </section>
 
-        {/* Strategy Table */}
+        {/* Spousal Benefit Strategy */}
+        {(formData.maritalStatus === 'married' || formData.maritalStatus === 'divorced') && (
+          <section>
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Spousal Benefit Strategy</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium">Spouse Full Name</label>
+                <input
+                  name="spouseName"
+                  value={ssData.spouseName}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Spouse DOB</label>
+                <input
+                  type="date"
+                  name="spouseDob"
+                  value={ssData.spouseDob}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Spouse Claiming Age</label>
+                <select
+                  name="spouseClaimAge"
+                  value={ssData.spouseClaimAge}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+                >
+                  <option value="62">62</option>
+                  <option value="67">67 (FRA)</option>
+                  <option value="70">70</option>
+                </select>
+              </div>
+              <div className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  name="useSpousalMaxDelay"
+                  checked={ssData.useSpousalMaxDelay}
+                  onChange={handleChange}
+                  id="useSpousalMaxDelay"
+                  className="h-5 w-5 text-blue-600"
+                />
+                <label htmlFor="useSpousalMaxDelay" className="ml-2 block text-sm font-medium">
+                  Use spousal benefit now and delay my own until 70
+                </label>
+              </div>
+              {ssData.useSpousalMaxDelay && (
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded border border-blue-200">
+                  <p><strong>Note:</strong> If one passes first, the surviving spouse can receive the higher of the two benefits.</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Earnings Test */}
         <section>
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Claiming Strategy Comparison</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Claiming Age</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Monthly Benefit</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Total by Age 85</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">Break-Even Age</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-4 py-2 whitespace-nowrap">62</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{formatMoney(getMonthlyPayout('62', ssData.estimatedMonthlySS, ssData.wepApplied, false))}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{formatMoney(data62[23])}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">~80</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 whitespace-nowrap">67</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{formatMoney(getMonthlyPayout('67', ssData.estimatedMonthlySS, ssData.wepApplied, false))}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{formatMoney(data67[18])}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">~83</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 whitespace-nowrap">70</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{formatMoney(getMonthlyPayout('70', ssData.estimatedMonthlySS, ssData.wepApplied, false))}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">{formatMoney(data70[15])}</td>
-                  <td className="px-4 py-2 whitespace-nowrap">N/A</td>
-                </tr>
-              </tbody>
-            </table>
+          <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Earnings Test</h2>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="workWhileCollectingSS"
+                checked={formData.workWhileCollectingSS}
+                onChange={handleChange}
+                id="workWhileCollectingSS"
+                className="h-5 w-5 text-blue-600"
+              />
+              <label htmlFor="workWhileCollectingSS" className="ml-2 block text-sm font-medium">
+                Will you continue working after you start collecting SS?
+              </label>
+            </div>
+            {formData.workWhileCollectingSS && (
+              <div className="pl-4 space-y-4 mt-2">
+                <div>
+                  <label className="block text-sm font-medium">Expected Annual Income</label>
+                  <input
+                    type="number"
+                    name="expectedEarnings"
+                    value={formData.expectedEarnings || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+                  />
+                </div>
+                <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded border border-yellow-200">
+                  <p><strong>Earnings Test:</strong> In 2024, if you earn more than $21,240/year before FRA, you lose $1 of SS for every $2 earned above limit.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Dependent Benefits */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Children / Dependents</h2>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="hasDependents"
+                checked={ssData.hasDependents}
+                onChange={(e) => handleChange({ target: { name: 'hasDependents', value: e.target.checked, type: 'checkbox' } })}
+                id="hasDependents"
+                className="h-5 w-5 text-blue-600"
+              />
+              <label htmlFor="hasDependents" className="ml-2 block text-sm font-medium">
+                Do you have any dependents under 18 or in school?
+              </label>
+            </div>
+            {ssData.hasDependents && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium">Number of Dependents</label>
+                  <input
+                    type="number"
+                    name="numberOfDependents"
+                    value={ssData.numberOfDependents}
+                    onChange={handleChange}
+                    placeholder="1"
+                    className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Dependent Ages</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    {[...Array(parseInt(ssData.numberOfDependents) || 0)].map((_, i) => (
+                      <input
+                        key={i}
+                        type="number"
+                        name={`dependentAge${i}`}
+                        value={ssData.dependentsAges[i] || ''}
+                        onChange={(e) => handleArrayChange(i, e)}
+                        placeholder="Age"
+                        className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded border border-blue-200">
+                  <p><strong>Note:</strong> Children under 18 may be eligible for up to 50% of your SS benefit. Stops at 18 unless they're still in school (until 19), or disabled.</p>
+                  <a href="https://www.ssa.gov/benefits/retired/types.html#tabpanel=tab1" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">
+                    Learn more on SSA.gov →
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Disability Considerations */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Disability Considerations</h2>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="receivingSsdi"
+                checked={ssData.receivingSsdi}
+                onChange={handleChange}
+                id="receivingSsdi"
+                className="h-5 w-5 text-blue-600"
+              />
+              <label htmlFor="receivingSsdi" className="ml-2 block text-sm font-medium">
+                Are you currently receiving SSDI?
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="medicalRetirement"
+                checked={ssData.medicalRetirement}
+                onChange={handleChange}
+                id="medicalRetirement"
+                className="h-5 w-5 text-blue-600"
+              />
+              <label htmlFor="medicalRetirement" className="ml-2 block text-sm font-medium">
+                Are you considering medical retirement?
+              </label>
+            </div>
+            {ssData.receivingSsdi && (
+              <div className="text-sm text-gray-600 bg-red-50 p-3 rounded border border-red-200">
+                <p><strong>Important:</strong> SSDI is NOT reduced by WEP or GPO. However, once you stop working and begin drawing regular SS, WEP/GPO will apply.</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -232,69 +417,36 @@ export default function SocialSecurityStrategyPage({ formData, setFormData, setP
           </div>
         </section>
 
-        {/* Earnings Test */}
-        <section className="mt-8">
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Earnings Test</h2>
-          <div className="space-y-4">
-            <div className="flex items-center">
+        {/* Tax Impact */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Tax Impact Analysis</h2>
+          <p className="mb-4 text-sm text-gray-600">Compare projected taxes paid over time between account types.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium">Current Tax Bracket (%)</label>
               <input
-                type="checkbox"
-                name="workWhileCollectingSS"
-                checked={formData.workWhileCollectingSS}
-                onChange={(e) => handleChange({ target: { name: e.target.name, value: e.target.checked, type: 'checkbox' }}}
-                id="workWhileCollectingSS"
-                className="h-5 w-5 text-blue-600"
+                type="number"
+                name="estimatedTaxBracket"
+                value={formData.estimatedTaxBracket || 22}
+                onChange={handleChange}
+                placeholder="22"
+                className="mt-1 block w-full border-gray-300 rounded shadow-sm"
               />
-              <label htmlFor="workWhileCollectingSS" className="ml-2 block text-sm font-medium">
-                Will you continue working after you start collecting SS?
-              </label>
             </div>
-            {formData.workWhileCollectingSS && (
-              <div className="pl-4 space-y-4 mt-2">
-                <div>
-                  <label className="block text-sm font-medium">Expected Annual Income</label>
-                  <input
-                    type="number"
-                    name="expectedEarnings"
-                    value={formData.expectedEarnings || ''}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border-gray-300 rounded shadow-sm"
-                  />
-                </div>
-                <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded border border-yellow-200">
-                  <p><strong>Earnings Test:</strong> In 2024, if you earn more than $21,240/year before FRA, you lose $1 of SS for every $2 earned above limit.</p>
-                </div>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium">Future Tax Bracket (%)</label>
+              <input
+                type="number"
+                name="futureTaxBracket"
+                value={formData.futureTaxBracket || 22}
+                onChange={handleChange}
+                placeholder="22"
+                className="mt-1 block w-full border-gray-300 rounded shadow-sm"
+              />
+            </div>
           </div>
         </section>
-
-        {/* Spousal Strategy */}
-        {(formData.maritalStatus === 'married' || formData.maritalStatus === 'divorced') && (
-          <section className="mt-8">
-            <h2 className="text-xl font-semibold mb-4 border-b pb-2 bg-blue-50 p-2 rounded">Spousal Benefit Strategy</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium">Was your marriage 10+ years long?</label>
-                <select
-                  name="spouseMarriageLength"
-                  value={formData.spouseMarriageLength || ''}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded shadow-sm"
-                >
-                  <option value="">Select</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </div>
-              {formData.spouseMarriageLength === 'yes' && (
-                <div className="text-sm text-gray-600 bg-green-50 p-3 rounded border border-green-200">
-                  <p>You qualify for spousal benefits even after divorce, as long as you were married 10+ years and are not remarried before 60.</p>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
 
         {/* Navigation */}
         <div className="mt-8 flex justify-between">
