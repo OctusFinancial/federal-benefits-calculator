@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import SocialSecurityStrategyPage from './SocialSecurityStrategyPage';
-import TspStrategyPage from './TspStrategyPage';
-import ResultsSummaryPage from './ResultsSummaryPage';
+import SocialSecurityStrategyPage from './SocialSecurityStrategyPage.jsx';
+import TspStrategyPage from './TspStrategyPage.jsx';
+import ResultsSummaryPage from './ResultsSummaryPage.jsx';
 
 export default function App() {
   const [page, setPage] = useState(1);
