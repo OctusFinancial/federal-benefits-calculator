@@ -5,9 +5,10 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      input: {
-        main: 'public/index.html', // Point to the HTML entry
-      },
+      input: 'public/index.html', // Define HTML as the entry point
     },
+  },
+  resolve: {
+    extensions: ['.js', '.ts', '.tsx'], // Ensure TS/TSX support
   },
 });
