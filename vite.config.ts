@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  root: 'public', // Set public as the root where index.html resides
+  root: 'public', // Root where index.html resides
   build: {
     outDir: '../dist', // Output to dist outside public
     rollupOptions: {
