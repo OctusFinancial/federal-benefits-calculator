@@ -5,5 +5,12 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      input: '/index.html', 
+    },
+  },
+  resolve: {
+    extensions: ['.js', '.jsx'],  
   },
 });
