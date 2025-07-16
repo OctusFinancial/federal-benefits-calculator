@@ -4,12 +4,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     rollupOptions: {
       input: 'index.html',
     },
   },
   resolve: {
-    extensions: ['.js'], // Focus on JS only
+    extensions: ['.js'], // optional, you can even remove this line
   },
 });
